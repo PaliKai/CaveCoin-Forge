@@ -1,0 +1,9 @@
+main: me.PaliKai.CaveCoinForge.Main
+name: CaveCoinForge
+version: 1.0
+author: PaliKai
+api-version: 1.16
+
+commands:
+  forge:
+  forges:
