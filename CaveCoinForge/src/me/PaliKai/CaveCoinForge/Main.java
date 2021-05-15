@@ -138,7 +138,7 @@ public class Main extends JavaPlugin implements Listener {
 	
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-		if (label.equalsIgnoreCase("Forge")) {
+		if (label.equalsIgnoreCase("Forge") || label.equalsIgnoreCase("f")) {
 			if (sender instanceof Player) {
 				Player player = (Player) sender;
 				if (player.hasPermission("forge.use")) {

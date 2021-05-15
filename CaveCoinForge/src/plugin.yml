@@ -6,4 +6,5 @@ api-version: 1.16
 
 commands:
   forge:
+    aliases: f
   forges:
