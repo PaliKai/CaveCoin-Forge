@@ -52,6 +52,10 @@ import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 
+//99% Programmed by PaliKai
+
+//Inventory Serialization by graywolf336 - https://gist.github.com/graywolf336/8153678
+
 public class Main extends JavaPlugin implements Listener {
 	
 	public Long delay = 36000L;
