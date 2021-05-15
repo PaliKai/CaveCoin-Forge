@@ -297,7 +297,7 @@ public class Main extends JavaPlugin implements Listener {
 	
 	@Override
 	public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
-		if (label.equalsIgnoreCase("Forge")) {
+		if (label.equalsIgnoreCase("Forge") || label.equalsIgnoreCase("f")) {
 			if (sender instanceof Player) {
 				Player player = (Player) sender;
 				if (args.length == 1) {
