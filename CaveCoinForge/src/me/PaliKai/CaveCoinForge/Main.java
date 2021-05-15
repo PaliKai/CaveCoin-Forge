@@ -318,7 +318,15 @@ public class Main extends JavaPlugin implements Listener {
 					
 					return returns;
 				} else {
-					return Collections.emptyList();
+					if (args.length > 1) {
+						if (args[0].equalsIgnoreCase("chance") || args[0].equalsIgnoreCase("chances") || args[0].equalsIgnoreCase("delay") || args[0].equalsIgnoreCase("convert")) {
+							List<String> returns = new ArrayList<>();
+							
+							returns.add("reset");
+							
+							return returns;
+						}
+					}
 				}
 			}
 			return Collections.emptyList();
