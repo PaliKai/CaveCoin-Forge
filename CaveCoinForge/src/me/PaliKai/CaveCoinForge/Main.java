@@ -509,27 +509,28 @@ public class Main extends JavaPlugin implements Listener {
 			ItemStack item = event.getItem();
 			Block block = event.getClickedBlock();
 			Block toPlace = block.getRelative(event.getBlockFace());
-			if (item.isSimilar(forgeItem())) {
-				if (event.getPlayer().getWorld().getName().equalsIgnoreCase("plot") || event.getPlayer().getGameMode() == GameMode.CREATIVE) {
-					if (!block.getType().toString().contains("SIGN")) {
-						if (!cooldown.contains(player)) {
-							spawnForge(player, toPlace);
-							item.setAmount(item.getAmount() - 1);
-							cooldown.add(player);
-							this.getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-								@Override
-								public void run() {
-									cooldown.remove(player);
-								}
-							}, 5L);
+			if (toPlace.getY() <= 255 && toPlace.getType() == Material.AIR) {
+				if (item.isSimilar(forgeItem())) {
+					if (event.getPlayer().getWorld().getName().equalsIgnoreCase("plot") || event.getPlayer().getGameMode() == GameMode.CREATIVE) {
+						if (!block.getType().toString().contains("SIGN")) {
+							if (!cooldown.contains(player)) {
+								spawnForge(player, toPlace);
+								item.setAmount(item.getAmount() - 1);
+								cooldown.add(player);
+								this.getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+									@Override
+									public void run() {
+										cooldown.remove(player);
+									}
+								}, 5L);
+							}
 						}
+					} else {
+						event.getPlayer().sendMessage(ChatColor.RED + "You cannot do this in this world.");
 					}
-				} else {
-					event.getPlayer().sendMessage(ChatColor.RED + "You cannot do this in this world.");
 				}
 			}
 		}
-		
 	}
 	
 	@EventHandler
