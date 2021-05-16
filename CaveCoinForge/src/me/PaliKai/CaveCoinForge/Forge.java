@@ -13,9 +13,12 @@ import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
+
+import net.md_5.bungee.api.ChatColor;
 
 public class Forge {
 	public Main main;
@@ -28,14 +31,14 @@ public class Forge {
 	
 	public boolean full;
 	
+	public boolean running = false;
+	
 	public Forge(Main main, Block chest, Inventory inventory, UUID minion, UUID owner) {
 		this.main = main;
 		this.chest = chest;
 		this.inventory = inventory;
 		this.minion = minion;
 		this.owner = owner;
-		startRunnable();
-		startClang();
 	}
 	
 	public void refine() {
@@ -122,43 +125,106 @@ public class Forge {
 			chest.getWorld().dropItemNaturally(chest.getLocation().add(0, 1, 0), main.forgeItem());
 		}
 		chest.setType(Material.AIR);
+		running = false;
+		if (task != null) {
+			cancelTask();
+		}
 	}
 	
-	int ticks = 0;
 	int seconds = 0;
+	int minutes = 0;
 	
 	public void startRunnable() {
+		if (main.delay >= 60) {
+			seconds = (int) (main.delay % 60);
+			minutes = (int) ((main.delay - (main.delay % 60)) / 60);
+		} else {
+			seconds = (int) (main.delay * 1);
+			minutes = 0;
+		}
 		BukkitRunnable runnable = new BukkitRunnable() {
 			@Override
 			public void run() {
-				if (minion == null || inventory == null || !(chest.getState() instanceof Chest)) {
-					this.cancel();
-					return;
-				}
-				refine();
-			}
-		};
-		
-		task = runnable.runTaskTimer(main, 0, main.delay);
-	}
-	
-	public void startClang() {
-		BukkitRunnable runnable = new BukkitRunnable() {
-			@Override
-			public void run() {
-				if (minion == null || inventory == null || !(chest.getState() instanceof Chest)) {
-					this.cancel();
-					return;
-				}
-				ItemStack Unrefined = inventory.getItem(11);
 				
-				if (Unrefined != null && full == false) {
+				if (seconds % 5 == 0 && seconds != 0) {
 					chest.getWorld().playSound(chest.getLocation().add(.5, 1, .5), Sound.BLOCK_ANVIL_PLACE, .5F, 1.1F);
 					chest.getWorld().spawnParticle(Particle.LAVA, chest.getLocation().add(.5, 1, .5), 3, .2, .2, .2);
 				}
+				if (seconds < 0) {
+					if (minutes >= 1) {
+						seconds = 59;
+						minutes--;
+					} else {
+						if (main.delay >= 60) {
+							seconds = (int) (main.delay % 60) - 1;
+							minutes = (int) ((main.delay - (main.delay % 60)) / 60);
+						} else {
+							seconds = (int) (main.delay - 1);
+							minutes = 0;
+						}
+						running = true;
+						if (minion == null || inventory == null || !(chest.getState() instanceof Chest) || full) {
+							cancelTask();
+							running = false;
+							return;
+						}
+						refine();
+						if (!(inventory.getItem(11) != null && inventory.getItem(11).getAmount() >= main.convert)) {
+							cancelTask();
+							running = false;
+							return;
+						}
+					}
+				}
+				
+				String time = minutes + ":" + (seconds > 9 ? seconds : "0" + seconds);
+				ItemMeta meta = inventory.getItem(13).getItemMeta();
+				meta.setDisplayName(ChatColor.RESET + "" + ChatColor.GREEN + time + ChatColor.YELLOW + "" + ChatColor.BOLD + " ->");
+				inventory.getItem(13).setItemMeta(meta);
+				
+				ArmorStand as = null;
+				for (Entity entity : Bukkit.getWorld("plot").getNearbyEntities(chest.getLocation().add(new Vector(0, 1, 0)), .5, .5, .5)) {
+					if (entity.getUniqueId().equals(minion)) {
+						as = (ArmorStand) entity;
+						break;
+					}
+				}
+				if (as != null) {
+					as.setCustomName(ChatColor.RESET + "" + ChatColor.GREEN + time);
+					as.setCustomNameVisible(true);
+				}
+				
+				seconds--;
+				
 			}
 		};
 		
-		task = runnable.runTaskTimer(main, 0, 100L);
+		task = runnable.runTaskTimer(main, 0, 20);
 	}
+	
+	public void cancelTask() {
+		ArmorStand as = null;
+		for (Entity entity : Bukkit.getWorld("plot").getNearbyEntities(chest.getLocation().add(new Vector(0, 1, 0)), .5, .5, .5)) {
+			if (entity.getUniqueId().equals(minion)) {
+				as = (ArmorStand) entity;
+				break;
+			}
+		}
+		if (as != null) {
+			as.setCustomNameVisible(false);
+		}
+		ItemMeta meta = inventory.getItem(13).getItemMeta();
+		meta.setDisplayName(ChatColor.RESET + "" + ChatColor.WHITE + "" + ChatColor.BOLD + "->");
+		inventory.getItem(13).setItemMeta(meta);
+		
+		task.cancel();
+	}
+	
+	public void ping() {
+		if (running == false) {
+			running = true;
+			startRunnable();
+		}
+	}
+	
 }

@@ -58,7 +58,7 @@ import com.mojang.authlib.properties.Property;
 
 public class Main extends JavaPlugin implements Listener {
 	
-	public Long delay = 36000L;
+	public Long delay = 1800L;
 	public int convert = 8;
 	public int chance = 12;
 	
@@ -90,7 +90,7 @@ public class Main extends JavaPlugin implements Listener {
 		if (this.getConfig().getLong("delay") > 0) {
 			delay = this.getConfig().getLong("delay");
 		} else {
-			delay = 36000L;
+			delay = 1800L;
 		}
 		if (this.getConfig().getInt("convert") > 0) {
 			convert = this.getConfig().getInt("convert");
@@ -102,6 +102,8 @@ public class Main extends JavaPlugin implements Listener {
 		} else {
 			chance = 12;
 		}
+		
+		restartForges();
 	}
 	
 	@Override
@@ -176,7 +178,6 @@ public class Main extends JavaPlugin implements Listener {
 									try {
 										if (Integer.parseInt((args[1])) != 0) {
 											chance = Integer.parseInt((args[1]));
-											restartForges();
 											player.sendMessage(ChatColor.GREEN + "Chances are now " + ChatColor.YELLOW + 1 + ChatColor.GREEN + " in " + ChatColor.YELLOW + chance + ChatColor.GREEN + ".");
 										} else {
 											player.sendMessage(ChatColor.RED + "Please enter a number greater than 0.");
@@ -192,15 +193,15 @@ public class Main extends JavaPlugin implements Listener {
 						if (args[0].equalsIgnoreCase("delay")) {
 							if (args.length == 2) {
 								if (args[1].equalsIgnoreCase("reset")) {
-									delay = 36000L;
+									delay = 1800L;
 									restartForges();
-									player.sendMessage(ChatColor.GREEN + "Delay reset to " + ChatColor.YELLOW + delay + ChatColor.GREEN + " ticks.");
+									player.sendMessage(ChatColor.GREEN + "Delay reset to " + ChatColor.YELLOW + delay + ChatColor.GREEN + " seconds.");
 								} else {
 									try {
 										if (Long.parseLong((args[1])) != 0) {
 											delay = Long.parseLong((args[1]));
 											restartForges();
-											player.sendMessage(ChatColor.GREEN + "Delay set to " + ChatColor.YELLOW + delay + ChatColor.GREEN + " ticks.");
+											player.sendMessage(ChatColor.GREEN + "Delay set to " + ChatColor.YELLOW + delay + ChatColor.GREEN + " seconds.");
 										} else {
 											player.sendMessage(ChatColor.RED + "Please enter a number greater than 0.");
 										}
@@ -209,7 +210,7 @@ public class Main extends JavaPlugin implements Listener {
 									}
 								}
 							} else {
-								player.sendMessage(ChatColor.GREEN + "Delay is " + ChatColor.YELLOW + delay + ChatColor.GREEN + " ticks.");
+								player.sendMessage(ChatColor.GREEN + "Delay is " + ChatColor.YELLOW + delay + ChatColor.GREEN + " seconds.");
 							}
 						}
 						if (args[0].equalsIgnoreCase("convert") || args[0].equalsIgnoreCase("amount")) {
@@ -235,11 +236,11 @@ public class Main extends JavaPlugin implements Listener {
 						}
 						if (args[0].equalsIgnoreCase("settings")) {
 							player.sendMessage(ChatColor.GREEN + "Chances are " + ChatColor.YELLOW + 1 + ChatColor.GREEN + " in " + ChatColor.YELLOW + chance + ChatColor.GREEN + ".");
-							player.sendMessage(ChatColor.GREEN + "Delay is set to " + ChatColor.YELLOW + delay + ChatColor.GREEN + " ticks.");
+							player.sendMessage(ChatColor.GREEN + "Delay is set to " + ChatColor.YELLOW + delay + ChatColor.GREEN + " seconds.");
 							player.sendMessage(ChatColor.GREEN + "Conversion rate is " + ChatColor.YELLOW + convert + ChatColor.GREEN + " Unprocessed Cave Coins per Cave Coin.");
 						}
 						if (args[0].equalsIgnoreCase("reset")) {
-							delay = 36000L;
+							delay = 1800L;
 							convert = 8;
 							chance = 12;
 							restartForges();
@@ -552,25 +553,32 @@ public class Main extends JavaPlugin implements Listener {
 	public void invClick(InventoryClickEvent event) {
 		Player player = (Player) event.getWhoClicked();
 		Inventory inv = event.getClickedInventory();
-		ItemStack item = event.getCurrentItem();
+		ItemStack pickupItem = event.getCursor();
+		ItemStack clickedItem = event.getCurrentItem();
 		int slot = event.getSlot();
 		InventoryAction action = event.getAction();
-		if (item != null) {
-			if (getForgeFromInventory(inv) != null) {
-				if (slot != 11 && slot != 15) {
-					event.setCancelled(true);
-					
+		Forge forge = getForgeFromInventory(inv);
+		if (forge != null) {
+			if (action.toString().toLowerCase().contains("place")) {
+				if (slot == 11 && pickupItem != null && pickupItem.getType().equals(Material.PLAYER_HEAD) && pickupItem.getItemMeta().getLocalizedName().equalsIgnoreCase("UnprocessedCaveCoin")) {
+					forge.ping();
 				} else {
-					if (slot == 11) {
-						if (!item.getType().equals(Material.PLAYER_HEAD)) {
-							event.setCancelled(true);
-						}
-					} else {
-						if (!item.getType().equals(Material.PLAYER_HEAD)) {
-							event.setCancelled(true);
-						}
+					forge.running = false;
+					if (forge.task != null) {
+						forge.cancelTask();
 					}
 				}
+			}
+			if (action.toString().toLowerCase().contains("pickup")) {
+				if (slot == 11 && clickedItem != null && clickedItem.getType().equals(Material.PLAYER_HEAD) && clickedItem.getItemMeta().getLocalizedName().equalsIgnoreCase("UnprocessedCaveCoin")) {
+					forge.running = false;
+					if (forge.task != null) {
+						forge.cancelTask();
+					}
+				}
+			}
+			if (slot != 11 && slot != 15) {
+				event.setCancelled(true);
 			}
 		}
 	}
@@ -608,17 +616,19 @@ public class Main extends JavaPlugin implements Listener {
 	
 	public void restartForges() {
 		for (Forge forge : forges) {
-			forge.task.cancel();
-			forge.startRunnable();
+			forge.running = false;
+			if (forge.task != null) {
+				forge.cancelTask();
+			}
+			if (forge.inventory.getItem(11) != null && forge.inventory.getItem(11).getType().equals(Material.PLAYER_HEAD) && forge.inventory.getItem(11).getItemMeta().getLocalizedName().equalsIgnoreCase("UnprocessedCaveCoin")) {
+				forge.ping();
+			}
 		}
 	}
 	
 	public int getDir(Player player, Block block) {
 		Vector plr = player.getLocation().toVector();
 		Vector loc = block.getLocation().toVector();
-		
-		// Bukkit.broadcastMessage((plr.getX() - block.getX()) + ", " + (plr.getZ() -
-		// block.getZ()));
 		
 		if (Math.abs(plr.getX() - block.getX()) > Math.abs(plr.getZ() - block.getZ())) {
 			if (plr.subtract(loc).getX() > 0) {
@@ -638,10 +648,7 @@ public class Main extends JavaPlugin implements Listener {
 	
 	public BlockFace getBlockDir(Player player, Block block) {
 		Vector plr = player.getLocation().toVector();
-		Vector loc = block.getLocation().toVector();
-		
-		// Bukkit.broadcastMessage((plr.getX() - block.getX()) + ", " + (plr.getZ() -
-		// block.getZ()));
+		Vector loc = block.getLocation().toVector().add(new Vector(.5, 0, .5));
 		
 		if (Math.abs(plr.getX() - block.getX()) > Math.abs(plr.getZ() - block.getZ())) {
 			if (plr.subtract(loc).getX() > 0) {
