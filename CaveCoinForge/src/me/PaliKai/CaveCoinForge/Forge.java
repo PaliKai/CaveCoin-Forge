@@ -153,7 +153,8 @@ public class Forge {
 				ItemStack Unrefined = inventory.getItem(11);
 				
 				if (Unrefined != null && full == false) {
-					chest.getWorld().playSound(chest.getLocation().add(.5, 1, .5), Sound.BLOCK_ANVIL_PLACE, .7F, 1.2F);
+					chest.getWorld().playSound(chest.getLocation().add(.5, 1, .5), Sound.BLOCK_ANVIL_PLACE, .5F, 1.1F);
+					chest.getWorld().spawnParticle(Particle.LAVA, chest.getLocation().add(.5, 1, .5), 3, .2, .2, .2);
 				}
 			}
 		};
