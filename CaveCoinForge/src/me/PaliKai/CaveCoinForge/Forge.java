@@ -26,6 +26,8 @@ public class Forge {
 	
 	public BukkitTask task;
 	
+	public boolean full;
+	
 	public Forge(Main main, Block chest, Inventory inventory, UUID minion, UUID owner) {
 		this.main = main;
 		this.chest = chest;
@@ -33,6 +35,7 @@ public class Forge {
 		this.minion = minion;
 		this.owner = owner;
 		startRunnable();
+		startClang();
 	}
 	
 	public void refine() {
@@ -68,6 +71,7 @@ public class Forge {
 							}
 							Unrefined.setAmount(Unrefined.getAmount() - main.convert);
 							effects(chest.getLocation().add(.5, 1, .5));
+							full = false;
 						} else {
 							if (Refined == null) {
 								inventory.setItem(15, itemToAdd);
@@ -77,8 +81,9 @@ public class Forge {
 										Refined.setAmount(Refined.getAmount() + 1);
 										Unrefined.setAmount(Unrefined.getAmount() - main.convert);
 										effects(chest.getLocation().add(.5, 1, .5));
+										full = false;
 									} else {
-										// full
+										full = true;
 									}
 								}
 							}
@@ -135,5 +140,24 @@ public class Forge {
 		};
 		
 		task = runnable.runTaskTimer(main, 0, main.delay);
+	}
+	
+	public void startClang() {
+		BukkitRunnable runnable = new BukkitRunnable() {
+			@Override
+			public void run() {
+				if (minion == null || inventory == null || !(chest.getState() instanceof Chest)) {
+					this.cancel();
+					return;
+				}
+				ItemStack Unrefined = inventory.getItem(11);
+				
+				if (Unrefined != null && full == false) {
+					chest.getWorld().playSound(chest.getLocation().add(.5, 1, .5), Sound.BLOCK_ANVIL_PLACE, .7F, 1.2F);
+				}
+			}
+		};
+		
+		task = runnable.runTaskTimer(main, 0, 100L);
 	}
 }
