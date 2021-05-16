@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -17,6 +18,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.BlockData;
@@ -35,6 +37,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
@@ -356,6 +359,8 @@ public class Main extends JavaPlugin implements Listener {
 		((Directional) blockData).setFacing(getBlockDir(player, toPlace)); // Set latch direction
 		toPlace.setBlockData(blockData);
 		
+		toPlace.getWorld().playSound(toPlace.getLocation().add(.5, 1, .5), Sound.BLOCK_WOOD_PLACE, 2F, 1F);
+		
 		Location chest = toPlace.getLocation();
 		Location loc = toPlace.getLocation().add(0.5, 0.875, 0.5);
 		loc.setYaw(getDir(player, toPlace));
@@ -577,8 +582,46 @@ public class Main extends JavaPlugin implements Listener {
 					}
 				}
 			}
+			
+			if (action.equals(InventoryAction.MOVE_TO_OTHER_INVENTORY)) {
+				if (slot == 11 && clickedItem != null && clickedItem.getType().equals(Material.PLAYER_HEAD) && clickedItem.getItemMeta().getLocalizedName().equalsIgnoreCase("UnprocessedCaveCoin")) {
+					forge.running = false;
+					if (forge.task != null) {
+						forge.cancelTask();
+					}
+				}
+			}
+			
 			if (slot != 11 && slot != 15) {
 				event.setCancelled(true);
+			}
+		} else {
+			inv = event.getInventory();
+			forge = getForgeFromInventory(inv);
+			if (action.equals(InventoryAction.MOVE_TO_OTHER_INVENTORY)) {
+				if (inv.firstEmpty() == 11 && clickedItem != null && clickedItem.getType().equals(Material.PLAYER_HEAD) && clickedItem.getItemMeta().getLocalizedName().equalsIgnoreCase("UnprocessedCaveCoin")) {
+					forge.ping();
+				}
+			}
+		}
+	}
+	
+	@EventHandler
+	public void Drag(InventoryDragEvent event) {
+		Player player = (Player) event.getWhoClicked();
+		Inventory inv = event.getInventory();
+		ItemStack draggedItem = event.getOldCursor();
+		Set<Integer> slots = event.getInventorySlots();
+		Forge forge = getForgeFromInventory(inv);
+		if (forge != null) {
+			if (slots.contains(11) && draggedItem != null && draggedItem.getType().equals(Material.PLAYER_HEAD) && draggedItem.getItemMeta().getLocalizedName().equalsIgnoreCase("UnprocessedCaveCoin")) {
+				forge.ping();
+			} else {
+				forge.running = false;
+				if (forge.task != null) {
+					forge.cancelTask();
+				}
+				
 			}
 		}
 	}
@@ -628,9 +671,12 @@ public class Main extends JavaPlugin implements Listener {
 	
 	public int getDir(Player player, Block block) {
 		Vector plr = player.getLocation().toVector();
-		Vector loc = block.getLocation().toVector();
+		Vector loc = block.getLocation().toVector().add(new Vector(.5, 0, .5));
 		
-		if (Math.abs(plr.getX() - block.getX()) > Math.abs(plr.getZ() - block.getZ())) {
+		Bukkit.broadcastMessage(plr.toString());
+		Bukkit.broadcastMessage(loc.toString());
+		
+		if (Math.abs(plr.getX() - loc.getX()) > Math.abs(plr.getZ() - loc.getZ())) {
 			if (plr.subtract(loc).getX() > 0) {
 				return 270;
 			} else {
@@ -650,7 +696,7 @@ public class Main extends JavaPlugin implements Listener {
 		Vector plr = player.getLocation().toVector();
 		Vector loc = block.getLocation().toVector().add(new Vector(.5, 0, .5));
 		
-		if (Math.abs(plr.getX() - block.getX()) > Math.abs(plr.getZ() - block.getZ())) {
+		if (Math.abs(plr.getX() - loc.getX()) > Math.abs(plr.getZ() - loc.getZ())) {
 			if (plr.subtract(loc).getX() > 0) {
 				return BlockFace.EAST;
 			} else {

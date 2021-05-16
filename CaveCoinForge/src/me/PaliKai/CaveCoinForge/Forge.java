@@ -145,7 +145,12 @@ public class Forge {
 		BukkitRunnable runnable = new BukkitRunnable() {
 			@Override
 			public void run() {
-				
+				running = true;
+				if (minion == null || inventory == null || !(chest.getState() instanceof Chest) || full) {
+					cancelTask();
+					running = false;
+					return;
+				}
 				if (seconds % 5 == 0 && seconds != 0) {
 					chest.getWorld().playSound(chest.getLocation().add(.5, 1, .5), Sound.BLOCK_ANVIL_PLACE, .5F, 1.1F);
 					chest.getWorld().spawnParticle(Particle.LAVA, chest.getLocation().add(.5, 1, .5), 3, .2, .2, .2);
@@ -162,19 +167,16 @@ public class Forge {
 							seconds = (int) (main.delay - 1);
 							minutes = 0;
 						}
-						running = true;
-						if (minion == null || inventory == null || !(chest.getState() instanceof Chest) || full) {
-							cancelTask();
-							running = false;
-							return;
-						}
+						
 						refine();
-						if (!(inventory.getItem(11) != null && inventory.getItem(11).getAmount() >= main.convert)) {
-							cancelTask();
-							running = false;
-							return;
-						}
+						
 					}
+				}
+				
+				if (!(inventory.getItem(11) != null && inventory.getItem(11).getAmount() >= main.convert)) {
+					cancelTask();
+					running = false;
+					return;
 				}
 				
 				String time = minutes + ":" + (seconds > 9 ? seconds : "0" + seconds);
@@ -213,10 +215,13 @@ public class Forge {
 		if (as != null) {
 			as.setCustomNameVisible(false);
 		}
-		ItemMeta meta = inventory.getItem(13).getItemMeta();
-		meta.setDisplayName(ChatColor.RESET + "" + ChatColor.WHITE + "" + ChatColor.BOLD + "->");
-		inventory.getItem(13).setItemMeta(meta);
-		
+		if (inventory != null) {
+			if (inventory.getItem(13) != null) {
+				ItemMeta meta = inventory.getItem(13).getItemMeta();
+				meta.setDisplayName(ChatColor.RESET + "" + ChatColor.WHITE + "" + ChatColor.BOLD + "->");
+				inventory.getItem(13).setItemMeta(meta);
+			}
+		}
 		task.cancel();
 	}
 	
