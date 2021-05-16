@@ -19,6 +19,7 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.BlockData;
@@ -40,6 +41,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
@@ -72,18 +74,21 @@ public class Main extends JavaPlugin implements Listener {
 		this.saveDefaultConfig();
 		this.reloadConfig();
 		
-		if (this.getConfig().getList("chests") != null && this.getConfig().getList("inventories") != null && this.getConfig().getList("armorstands") != null && this.getConfig().getList("UUIDs") != null) {
-			LinkedList<Vector> chests = (LinkedList<Vector>) convertALtoLL(this.getConfig().getList("chests"));
-			LinkedList<String> inventories = (LinkedList<String>) convertALtoLL(this.getConfig().getList("inventories"));
-			LinkedList<String> armorstands = (LinkedList<String>) convertALtoLL(this.getConfig().getList("armorstands"));
-			LinkedList<String> UUIDs = (LinkedList<String>) convertALtoLL(this.getConfig().getList("UUIDs"));
-			
-			for (int i = 0; i < chests.size(); i++) {
-				if (chests.get(i).toLocation(Bukkit.getWorld("plot")).getBlock().getType().equals(Material.CHEST)) {
-					try {
-						forges.add(new Forge(this, Bukkit.getWorld("plot").getBlockAt(chests.get(i).toLocation(Bukkit.getWorld("plot"))), fromBase64(inventories.get(i)), UUID.fromString(armorstands.get(i)), UUID.fromString(UUIDs.get(i))));
-					} catch (IOException e) {
-						e.printStackTrace();
+		if (Bukkit.getWorld("plot") != null) {
+			forges.clear();
+			if (this.getConfig().getList("chests") != null && this.getConfig().getList("inventories") != null && this.getConfig().getList("armorstands") != null && this.getConfig().getList("UUIDs") != null) {
+				LinkedList<Vector> chests = (LinkedList<Vector>) convertALtoLL(this.getConfig().getList("chests"));
+				LinkedList<String> inventories = (LinkedList<String>) convertALtoLL(this.getConfig().getList("inventories"));
+				LinkedList<String> armorstands = (LinkedList<String>) convertALtoLL(this.getConfig().getList("armorstands"));
+				LinkedList<String> UUIDs = (LinkedList<String>) convertALtoLL(this.getConfig().getList("UUIDs"));
+				
+				for (int i = 0; i < chests.size(); i++) {
+					if (chests.get(i).toLocation(Bukkit.getWorld("plot")).getBlock().getType().equals(Material.CHEST)) {
+						try {
+							forges.add(new Forge(this, Bukkit.getWorld("plot").getBlockAt(chests.get(i).toLocation(Bukkit.getWorld("plot"))), fromBase64(inventories.get(i)), UUID.fromString(armorstands.get(i)), UUID.fromString(UUIDs.get(i))));
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
 					}
 				}
 			}
@@ -664,6 +669,31 @@ public class Main extends JavaPlugin implements Listener {
 			}
 			if (forge.inventory.getItem(11) != null && forge.inventory.getItem(11).getType().equals(Material.PLAYER_HEAD) && forge.inventory.getItem(11).getItemMeta().getLocalizedName().equalsIgnoreCase("UnprocessedCaveCoin")) {
 				forge.ping();
+			}
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	@EventHandler
+	public void onWorldLoad(WorldLoadEvent event) {
+		World world = event.getWorld();
+		if (world.getName().equalsIgnoreCase("plot")) {
+			forges.clear();
+			if (this.getConfig().getList("chests") != null && this.getConfig().getList("inventories") != null && this.getConfig().getList("armorstands") != null && this.getConfig().getList("UUIDs") != null) {
+				LinkedList<Vector> chests = (LinkedList<Vector>) convertALtoLL(this.getConfig().getList("chests"));
+				LinkedList<String> inventories = (LinkedList<String>) convertALtoLL(this.getConfig().getList("inventories"));
+				LinkedList<String> armorstands = (LinkedList<String>) convertALtoLL(this.getConfig().getList("armorstands"));
+				LinkedList<String> UUIDs = (LinkedList<String>) convertALtoLL(this.getConfig().getList("UUIDs"));
+				
+				for (int i = 0; i < chests.size(); i++) {
+					if (chests.get(i).toLocation(Bukkit.getWorld("plot")).getBlock().getType().equals(Material.CHEST)) {
+						try {
+							forges.add(new Forge(this, Bukkit.getWorld("plot").getBlockAt(chests.get(i).toLocation(Bukkit.getWorld("plot"))), fromBase64(inventories.get(i)), UUID.fromString(armorstands.get(i)), UUID.fromString(UUIDs.get(i))));
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
+				}
 			}
 		}
 	}
