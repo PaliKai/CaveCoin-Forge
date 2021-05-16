@@ -523,6 +523,7 @@ public class Main extends JavaPlugin implements Listener {
 				if (item.isSimilar(forgeItem())) {
 					if (event.getPlayer().getWorld().getName().equalsIgnoreCase("plot") || event.getPlayer().getGameMode() == GameMode.CREATIVE) {
 						if (!block.getType().toString().contains("SIGN")) {
+							event.setCancelled(true);
 							if (!cooldown.contains(player)) {
 								spawnForge(player, toPlace);
 								item.setAmount(item.getAmount() - 1);
