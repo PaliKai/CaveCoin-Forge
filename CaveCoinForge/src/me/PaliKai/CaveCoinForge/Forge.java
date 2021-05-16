@@ -151,7 +151,7 @@ public class Forge {
 					running = false;
 					return;
 				}
-				if (seconds % 5 == 0 && seconds != 0) {
+				if (seconds % 5 == 0 && (seconds != 0 || minutes > 0)) {
 					chest.getWorld().playSound(chest.getLocation().add(.5, 1, .5), Sound.BLOCK_ANVIL_PLACE, .5F, 1.1F);
 					chest.getWorld().spawnParticle(Particle.LAVA, chest.getLocation().add(.5, 1, .5), 3, .2, .2, .2);
 				}
