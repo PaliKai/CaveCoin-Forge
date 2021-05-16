@@ -73,7 +73,6 @@ public class Main extends JavaPlugin implements Listener {
 		this.reloadConfig();
 		
 		if (this.getConfig().getList("chests") != null && this.getConfig().getList("inventories") != null && this.getConfig().getList("armorstands") != null && this.getConfig().getList("UUIDs") != null) {
-			Bukkit.broadcastMessage("RL");
 			LinkedList<Vector> chests = (LinkedList<Vector>) convertALtoLL(this.getConfig().getList("chests"));
 			LinkedList<String> inventories = (LinkedList<String>) convertALtoLL(this.getConfig().getList("inventories"));
 			LinkedList<String> armorstands = (LinkedList<String>) convertALtoLL(this.getConfig().getList("armorstands"));
@@ -672,9 +671,6 @@ public class Main extends JavaPlugin implements Listener {
 	public int getDir(Player player, Block block) {
 		Vector plr = player.getLocation().toVector();
 		Vector loc = block.getLocation().toVector().add(new Vector(.5, 0, .5));
-		
-		Bukkit.broadcastMessage(plr.toString());
-		Bukkit.broadcastMessage(loc.toString());
 		
 		if (Math.abs(plr.getX() - loc.getX()) > Math.abs(plr.getZ() - loc.getZ())) {
 			if (plr.subtract(loc).getX() > 0) {
