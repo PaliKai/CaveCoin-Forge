@@ -519,7 +519,7 @@ public class Main extends JavaPlugin implements Listener {
 			ItemStack item = event.getItem();
 			Block block = event.getClickedBlock();
 			Block toPlace = block.getRelative(event.getBlockFace());
-			if (toPlace.getY() <= 255 && toPlace.getType() == Material.AIR) {
+			if (toPlace.getY() <= 255 && (toPlace.getType() == Material.AIR) || toPlace.getType() == Material.CAVE_AIR) {
 				if (item.isSimilar(forgeItem())) {
 					if (event.getPlayer().getWorld().getName().equalsIgnoreCase("plot") || event.getPlayer().getGameMode() == GameMode.CREATIVE) {
 						if (!block.getType().toString().contains("SIGN")) {
@@ -772,16 +772,6 @@ public class Main extends JavaPlugin implements Listener {
 			lL.add(t);
 		}
 		return lL;
-	}
-	
-	public LinkedList<Player> addAll(List<?> obj) {
-		LinkedList<Player> list = new LinkedList<Player>();
-		
-		for (Object object : obj) {
-			list.add((Player) object);
-		}
-		
-		return list;
 	}
 	
 	public static String toBase64(Inventory inventory) throws IllegalStateException {
